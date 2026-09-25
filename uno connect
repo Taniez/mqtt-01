@@ -1,0 +1,25 @@
+import serial
+import time
+
+# ตั้งค่าพอร์ตและ Baud rate ให้ตรงกับ Arduino
+# เปลี่ยน '/dev/ttyACM0' เป็นพอร์ตที่พบจากขั้นตอนก่อนหน้า
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+time.sleep(2) # รอให้การเชื่อมต่อ Serial รีเซ็ตและเสถียร
+
+try:
+    while True:
+        # ส่งข้อมูลไปยัง Arduino
+        message = "Hello Arduino\n"
+        ser.write(message.encode('utf-8'))
+        print(f"Sent: {message.strip()}")
+        
+        # รอรับข้อมูลตอบกลับจาก Arduino
+        if ser.in_waiting > 0:
+            response = ser.readline().decode('utf-8').rstrip()
+            print(f"Received: {response}")
+            
+        time.sleep(2) # ส่งทุกๆ 2 วินาที
+
+except KeyboardInterrupt:
+    print("Communication stopped.")
+    ser.close()
