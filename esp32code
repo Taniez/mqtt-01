@@ -1,0 +1,103 @@
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+// 1. ตั้งค่าหน้าจอ LCD (ที่อยู่ I2C ส่วนใหญ่คือ 0x27, ขนาด 16 ตัวอักษร 2 บรรทัด)
+// หากหน้าจอไม่ติดหรือไม่มีตัวอักษร ลองเปลี่ยน 0x27 เป็น 0x3F ดูครับ
+LiquidCrystal_I2C lcd(0x27, 16, 2);  
+
+// 2. ตั้งค่า Wi-Fi และ IP ของ Raspberry Pi Broker
+const char* ssid     = "ชื่อ_WiFi_ของคุณ";
+const char* password = "รหัสผ่าน_WiFi_ของคุณ";
+const char* mqtt_server = "IP_ของ_Pi_Broker"; // เช่น "192.168.1.50"
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// ฟังก์ชันสำหรับจัดการเมื่อมีข้อความจาก MQTT เข้ามา
+void callback(char* topic, byte* payload, unsigned int length) {
+  String message = "";
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+  
+  // ล้างหน้าจอเก่าออกก่อนแสดงผลใหม่
+  lcd.clear();
+  
+  // บรรทัดที่ 1: แสดงชื่อ Topic
+  lcd.setCursor(0, 0);
+  lcd.print("Topic: ");
+  lcd.print(topic);
+  
+  // บรรทัดที่ 2: แสดงข้อความที่ส่งมา
+  lcd.setCursor(0, 1);
+  lcd.print(message);
+  
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  Serial.println(message);
+}
+
+void setup() {
+  Serial.begin(115200);
+  
+  // เริ่มการทำงานของจอ LCD
+  lcd.begin();
+  lcd.backlight(); // เปิดไฟพื้นหลังหน้าจอ
+  lcd.setCursor(0, 0);
+  lcd.print("Connecting WiFi...");
+
+  // เชื่อมต่อ Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("WiFi Connected!");
+  delay(1000);
+
+  // ตั้งค่า MQTT
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("MQTT Connecting..");
+
+    if (client.connect("ESP32_LCD_Client")) {
+      Serial.println("connected");
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("MQTT Ready!");
+      
+      // สมัครรับข้อมูลจาก Topic ที่ต้องการ (เช่น esp32/lcd)
+      client.subscribe("esp32/lcd");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      
+      lcd.setCursor(0, 1);
+      lcd.print("Failed! Try again");
+      
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+}
