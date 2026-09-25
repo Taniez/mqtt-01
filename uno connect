@@ -23,10 +23,10 @@ void loop() {
       digitalWrite(3,HIGH);
     }
         if (data =="green"){
-      digitalWrite(6,HIGH);
+      digitalWrite(5,HIGH);
     }
         if (data =="yellow"){
-      digitalWrite(5,HIGH);
+      digitalWrite(6,HIGH);
     }
       if (data =="close"){
       digitalWrite(3,LOW);
