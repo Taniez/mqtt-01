@@ -1,0 +1,10 @@
+sudo nano /etc/mosquitto/mosquitto.conf
+
+"เอาไว้ล่างสุด"
+listener 1883 
+allow_anonymous true
+
+บันทึกไฟล์และออกจากโปรแกรม (กด Ctrl + O แล้วตามด้วย Enter เพื่อบันทึก จากนั้นกด Ctrl + X เพื่อออก)
+
+รีสตาร์ทเซอร์วิส Mosquitto เพื่อให้ค่าใหม่ทำงาน:
+sudo systemctl restart mosquitto
