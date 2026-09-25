@@ -1,0 +1,7 @@
+publish
+mosquitto_pub -h <IP_ของ_Broker> -t test/topic -m "Hello from Client Pi"
+(เปลี่ยน <IP_ของ_Broker> เป็น IP Address ที่ได้จากขั้นตอนแรก)
+
+Subscribe
+mosquitto_sub -h <IP_ของ_Broker> -t test/topic
+
